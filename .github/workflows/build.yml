@@ -87,7 +87,7 @@ jobs:
           sed -i 's/bpf_jit_blinding_enabled(prog)/false/g' kernel/bpf/verifier.c
           sed -i 's/-Werror//g' kernel/bpf/Makefile
           echo "ccflags-y += -Wno-incompatible-function-pointer-types" >> kernel/bpf/Makefile
-          sed -i '/apq8053\|msm8953/d' arch/arm64/boot/dts/qcom/Makefile
+          echo "dtb-\$(CONFIG_ARCH_MSM8953) += \$(patsubst %.dts,%.dtb,\$(notdir \$(wildcard \$(srctree)/\$(src)/*onclite*.dts)))" > arch/arm64/boot/dts/qcom/Makefile
 
 
           MAKE_ARGS=(
