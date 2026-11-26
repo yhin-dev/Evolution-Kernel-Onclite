@@ -47,7 +47,7 @@ jobs:
       - name: Apply Evolution Kernel Tuning & Compile
         working-directory: kernel_src
         run: |
-          export PATH="$GITHUB_WORKSPACE/clang/clang-r416183b/bin:$PATH"
+          export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
           export ARCH=arm64
           export SUBARCH=arm64
           export KBUILD_BUILD_USER="Evolution"
@@ -81,13 +81,20 @@ jobs:
 
           make O=out "$DEFCONFIG_NAME"
           make -j$(nproc) O=out \
-            CC="ccache clang" \
-            HOSTCC=gcc \
-            HOSTCXX=g++ \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            Image.gz-dtb
+          CC="ccache clang" \
+          LD=ld.lld \
+          AR=llvm-ar \
+          NM=llvm-nm \
+          OBJCOPY=llvm-objcopy \
+          OBJDUMP=llvm-objdump \
+          STRIP=llvm-strip \
+          HOSTCC=gcc \
+          HOSTCXX=g++ \
+          CLANG_TRIPLE=aarch64-linux-gnu- \
+          CROSS_COMPILE=aarch64-linux-gnu- \
+          CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+          Image.gz-dtb
+
 
       - name: Package AnyKernel3 Zip
         run: |
