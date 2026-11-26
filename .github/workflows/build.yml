@@ -33,7 +33,7 @@ jobs:
 
           # 2. SuSFS (JackA1ltman 4.9 Backport)
           git clone --depth=1 "$URL_SUSFS" susfs
-          patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch
+          patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch || true find . -name "*.rej" -delete
           bash susfs/Patches/susfs_inline_hook_patches.sh
 
           # 3. NoMount + Fix 4.9 Backported VFS
@@ -69,7 +69,6 @@ jobs:
           CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
           CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y
           CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
-          CONFIG_KSU_SUSFS_SUS_MAP=y
           CONFIG_NOMOUNT=y
           CONFIG_CPU_FREQ_DEFAULT_GOV_SCHEDUTIL=y
           CONFIG_TCP_CONG_ADVANCED=y
