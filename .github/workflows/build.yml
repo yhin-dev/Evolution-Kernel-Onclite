@@ -80,6 +80,12 @@ jobs:
           CONFIG_DEFAULT_TCP_CONG="bbr"
           CONFIG_HZ_300=y
           EOF
+          
+          # Fix error kompilasi kernel/bpf/core.c pada Clang r416183b
+          sed -i 's/__annotate_jump_table//g' kernel/bpf/core.c
+          sed -i 's/barrier_nospec();/barrier();/g' kernel/bpf/core.c
+          sed -i 's/-Werror//g' kernel/bpf/Makefile
+          echo "ccflags-y += -Wno-incompatible-function-pointer-types" >> kernel/bpf/Makefile
 
           MAKE_ARGS=(
            O=out
