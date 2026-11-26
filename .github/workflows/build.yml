@@ -17,9 +17,9 @@ jobs:
      run: |
        URL_KERNEL=$(echo "aHR0cHM6Ly9jb2RlYmVyZy5vcmcvaGFkYWQvYW5kcm9pZF9rZXJuZWxfeGlhb21pX29uY2xpdGUuZ2l0" | base64 -d)
        URL_CLANG=$(echo "aHR0cHM6Ly9hbmRyb2lkLmdvb2dsZXNvdXJjZS5jb20vcGxhdGZvcm0vcHJlYnVpbHRzL2NsYW5nL2hvc3QvbGludXgteDg2LytarchiveL3JlZnMvaGVhZHMvbWFpbi9jbGFuZy1yNTM2MjI1LnRhci5neg==" | base64 -d)
-       git clone --depth=1 "$URL_KERNEL" kernel_src
-       mkdir -p clang
-       curl -sL "$URL_CLANG" | tar -xz -C clang
+         git clone --depth=1 "$URL_KERNEL" kernel_src
+         mkdir -p clang
+         curl -sL "$URL_CLANG" | tar -xz -C clang
        
       - name: Integrate KernelSU-Next, SuSFS & NoMount
         working-directory: kernel_src
@@ -79,8 +79,8 @@ jobs:
           CONFIG_DEFAULT_TCP_CONG="bbr"
           CONFIG_HZ_300=y
           EOF
-                 make O=out "$DEFCONFIG_NAME"
-       make -j$(nproc) O=out \
+        make O=out "$DEFCONFIG_NAME"
+          make -j$(nproc) O=out \
          CC="ccache clang" \
          HOSTCC=gcc \
          HOSTCXX=g++ \
