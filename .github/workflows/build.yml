@@ -20,23 +20,29 @@ jobs:
 
       - name: Clone Kernel Source & Toolchain
         run: |
-          git clone --depth=1 -b 16 https://codeberg.org kernel_src
-          git clone --depth=1 https://github.com clang
+          CB="codeberg.org"
+          GH="github.com"
+          git clone --depth=1 -b 16 "https://${CB}/hadad/android_kernel_xiaomi_onclite.git" kernel_src
+          git clone --depth=1 "https://${GH}/kdrag0n/proton-clang.git" clang
 
       - name: Integrate KernelSU-Next, SuSFS & NoMount
         working-directory: kernel_src
         run: |
+          GH="github.com"
+          RAW="://githubusercontent.com"
+          GL="gitlab.com"
+
           # 1. KernelSU-Next
-          curl -LSs "https://githubusercontent.com" | bash -s next
+          curl -LSs "https://${RAW}/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 
           # 2. SuSFS (4.9 Backported)
-          git clone --depth=1 -b kernel-4.9 https://gitlab.com susfs
+          git clone --depth=1 -b kernel-4.9 "https://${GL}/simonpunk/susfs4ksu.git" susfs
           cp susfs/kernel_patches/fs/* fs/
           cp susfs/kernel_patches/include/linux/* include/linux/
           patch -p1 --fuzz=3 < susfs/kernel_patches/50_add_susfs_in_kernel-4.9.patch || true
 
           # 3. NoMount + Fix 4.9 Backported VFS
-          git clone --depth=1 https://github.com nomount_src
+          git clone --depth=1 "https://${GH}/maxsteeel/nomount.git" nomount_src
           bash nomount_src/kernel/setup.sh
           sed -i 's/vfs_getattr_nosec(&info->r_path, stat)/vfs_getattr_nosec(\&info->r_path, stat, STATX_BASIC_STATS, AT_STATX_SYNC_AS_STAT)/g' fs/nomount/nomount.c
           sed -i 's/int nm_getattr(struct vfsmount \*mnt, struct dentry \*dentry, struct kstat \*stat)/int nm_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int flags)/g' fs/nomount/nomount.c
@@ -46,11 +52,8 @@ jobs:
         working-directory: kernel_src
         run: |
           DEFCONFIG="arch/arm64/configs/onclite_defconfig"
-
-          # Identitas Evolution Kernel
           sed -i 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-Evolution-Kernel"/' $DEFCONFIG
 
-          # Aktifkan KSU-Next, SuSFS & NoMount
           cat << 'EOF' >> $DEFCONFIG
           CONFIG_KSU=y
           CONFIG_KSU_SUSFS=y
@@ -64,8 +67,6 @@ jobs:
           CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
           CONFIG_KSU_SUSFS_SUS_MAP=y
           CONFIG_NOMOUNT=y
-
-          # Tuning Gaming ML/FF + Irit Baterai Harian
           CONFIG_CPU_FREQ_DEFAULT_GOV_SCHEDUTIL=y
           CONFIG_TCP_CONG_ADVANCED=y
           CONFIG_TCP_CONG_BBR=y
@@ -93,7 +94,8 @@ jobs:
 
       - name: Package AnyKernel3 Zip
         run: |
-          git clone --depth=1 https://github.com AnyKernel3
+          GH="github.com"
+          git clone --depth=1 "https://${GH}/osm0sis/AnyKernel3.git" AnyKernel3
           cp kernel_src/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
 
           sed -i 's/kernel.string=.*/kernel.string=Evolution Kernel [A13-A17] by yhin-dev/' AnyKernel3/anykernel.sh
