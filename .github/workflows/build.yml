@@ -22,7 +22,7 @@ jobs:
         run: |
           CB="codeberg.org"
           GH="github.com"
-          git clone --depth=1 -b 16 "https://${CB}/hadad/android_kernel_xiaomi_onclite.git" kernel_src
+          git clone --depth=1 "https://${CB}/hadad/android_kernel_xiaomi_onclite.git" kernel_src
           git clone --depth=1 "https://${GH}/kdrag0n/proton-clang.git" clang
 
       - name: Integrate KernelSU-Next, SuSFS & NoMount
