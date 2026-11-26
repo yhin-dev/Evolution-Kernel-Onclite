@@ -110,20 +110,53 @@ jobs:
           make "${MAKE_ARGS[@]}" "$DEFCONFIG_NAME"
           make -j$(nproc) "${MAKE_ARGS[@]}" Image.gz-dtb
 
-      - name: Package AnyKernel3 Zip
-        run: |
+          - name: Package AnyKernel3 Zip
+            run: |
           URL_AK3=$(echo "aHR0cHM6Ly9naXRodWIuY29tL29zbTBzaXMvQW55S2VybmVsMy5naXQ=" | base64 -d)
           git clone --depth=1 "$URL_AK3" AnyKernel3
           cp kernel_src/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
 
-          sed -i 's/kernel.string=.*/kernel.string=Evolution Kernel [A13-A17] by yhin-dev/' AnyKernel3/anykernel.sh
-          sed -i 's/device.name1=.*/device.name1=onclite/' AnyKernel3/anykernel.sh
-          sed -i 's/device.name2=.*/device.name2=onc/' AnyKernel3/anykernel.sh
-          sed -i 's/do.devicecheck=.*/do.devicecheck=1/' AnyKernel3/anykernel.sh
-          sed -i 's/supported.versions=.*/supported.versions=/' AnyKernel3/anykernel.sh
+          # Tulis ulang anykernel.sh khusus untuk Redmi 7 (onclite) lintas A13-A17
+          cat << 'EOF' > AnyKernel3/anykernel.sh
+          ### AnyKernel3 Ramdisk Mod Script
+          # osm0sis @ xda-developers
+
+          ### AnyKernel setup
+          properties() { '
+          kernel.string=Evolution Kernel [A13-A17] by yhin-dev
+          do.devicecheck=1
+          do.modules=0
+          do.systemless=1
+          do.cleanup=1
+          do.cleanuponabort=0
+          device.name1=onclite
+          device.name2=onc
+          supported.versions=
+          supported.patchlevels=
+          supported.vendorpatchlevels=
+          '; }
+
+          ### AnyKernel install
+          boot_attributes() {
+          set_perm_recursive 0 0 755 644 $RAMDISK/*;
+          set_perm_recursive 0 0 750 750 $RAMDISK/init* $RAMDISK/sbin;}
+
+          BLOCK=/dev/block/bootdevice/by-name/boot;
+          IS_SLOT_DEVICE=0;
+          RAMDISK_COMPRESSION=auto;
+          PATCH_VBMETA_FLAG=auto;
+
+          . tools/ak3-core.sh;
+
+          # boot install
+          dump_boot;
+          write_boot;
+          ## end boot install
+          EOF
 
           cd AnyKernel3
           zip -r9 "$GITHUB_WORKSPACE/Evolution-Kernel-onclite-A13-A17-$(date +%Y%m%d).zip" * -x .git README.md *placeholder
+
 
       - name: Upload Evolution Kernel Artifact
         uses: actions/upload-artifact@v4
