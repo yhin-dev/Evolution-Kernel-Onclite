@@ -111,12 +111,11 @@ jobs:
           make -j$(nproc) "${MAKE_ARGS[@]}" Image.gz-dtb
 
           - name: Package AnyKernel3 Zip
-            run: |
+          run: |
           URL_AK3=$(echo "aHR0cHM6Ly9naXRodWIuY29tL29zbTBzaXMvQW55S2VybmVsMy5naXQ=" | base64 -d)
           git clone --depth=1 "$URL_AK3" AnyKernel3
           cp kernel_src/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
 
-          # Tulis ulang anykernel.sh khusus untuk Redmi 7 (onclite) lintas A13-A17
           cat << 'EOF' > AnyKernel3/anykernel.sh
           ### AnyKernel3 Ramdisk Mod Script
           # osm0sis @ xda-developers
@@ -138,8 +137,9 @@ jobs:
 
           ### AnyKernel install
           boot_attributes() {
-          set_perm_recursive 0 0 755 644 $RAMDISK/*;
-          set_perm_recursive 0 0 750 750 $RAMDISK/init* $RAMDISK/sbin;}
+            set_perm_recursive 0 0 755 644 $RAMDISK/*;
+            set_perm_recursive 0 0 750 750 $RAMDISK/init* $RAMDISK/sbin;
+          }
 
           BLOCK=/dev/block/bootdevice/by-name/boot;
           IS_SLOT_DEVICE=0;
