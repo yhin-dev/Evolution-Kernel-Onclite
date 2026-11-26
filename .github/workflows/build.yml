@@ -47,7 +47,7 @@ jobs:
       - name: Apply Evolution Kernel Tuning & Compile
         working-directory: kernel_src
         run: |
-          export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
+          export PATH="$GITHUB_WORKSPACE/clang/clang-r416183b/bin:$PATH"
           export ARCH=arm64
           export SUBARCH=arm64
           export KBUILD_BUILD_USER="Evolution"
