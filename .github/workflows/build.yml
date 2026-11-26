@@ -12,28 +12,27 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential bc cpio flex bison libssl-dev \
             libelf-dev dwarves zip curl git python3 rsync jq ccache lz4
+          git config --global url."https://".insteadOf git://
 
       - name: Clone Kernel Source & Toolchain
         run: |
-          H="https://"
-          git clone --depth=1 "${H}codeberg.org/hadad/android_kernel_xiaomi_onclite.git" kernel_src
-          git clone --depth=1 "${H}://github.com" clang
+          git clone --depth=1 git://codeberg.org/hadad/android_kernel_xiaomi_onclite.git kernel_src
+          git clone --depth=1 git://://github.com clang
 
       - name: Integrate KernelSU-Next, SuSFS & NoMount
         working-directory: kernel_src
         run: |
-          H="https://"
-
           # 1. KernelSU-Next
-          curl -LSs "${H}://githubusercontent.com" | bash -s next
+          git clone --depth=1 -b next git://://github.com KernelSU-Next
+          bash KernelSU-Next/kernel/setup.sh next
 
           # 2. SuSFS (JackA1ltman 4.9 Backport)
-          git clone --depth=1 -b kernel-4.9-backport "${H}://github.com" susfs
+          git clone --depth=1 -b kernel-4.9-backport git://://github.com susfs
           patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch
           bash susfs/Patches/susfs_inline_hook_patches.sh
 
           # 3. NoMount + Fix 4.9 Backported VFS
-          git clone --depth=1 "${H}://github.com" nomount_src
+          git clone --depth=1 git://://github.com nomount_src
           bash nomount_src/kernel/setup.sh
           sed -i 's/vfs_getattr_nosec(&info->r_path, stat)/vfs_getattr_nosec(\&info->r_path, stat, STATX_BASIC_STATS, AT_STATX_SYNC_AS_STAT)/g' fs/nomount/nomount.c
           sed -i 's/int nm_getattr(struct vfsmount \*mnt, struct dentry \*dentry, struct kstat \*stat)/int nm_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int flags)/g' fs/nomount/nomount.c
@@ -85,8 +84,7 @@ jobs:
 
       - name: Package AnyKernel3 Zip
         run: |
-          H="https://"
-          git clone --depth=1 "${H}://github.com" AnyKernel3
+          git clone --depth=1 git://://github.com AnyKernel3
           cp kernel_src/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
 
           sed -i 's/kernel.string=.*/kernel.string=Evolution Kernel [A13-A17] by yhin-dev/' AnyKernel3/anykernel.sh
