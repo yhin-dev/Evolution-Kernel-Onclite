@@ -13,10 +13,10 @@ jobs:
           sudo apt-get install -y build-essential bc cpio flex bison libssl-dev \
             libelf-dev dwarves zip curl git python3 rsync jq ccache lz4
 
-      - name: Clone Kernel Source & Toolchain
+            - name: Clone Kernel Source & Toolchain
         run: |
-          URL_KERNEL=$(echo "aHR0cHM6Ly9jb2RlYmVyZy5vcmcvaGFkYWQvYW5kcm9pZF9rZXJuZWxfeGlhb21pX29uY2xpdGUuZ2l0" | base64 -d)
-          URL_CLANG=$(echo "aHR0cHM6Ly9hbmRyb2lkLmdvb2dsZXNvdXJjZS5jb20vcGxhdGZvcm0vcHJlYnVpbHRzL2NsYW5nL2hvc3QvbGludXgteDg2LytarchiveL3JlZnMvaGVhZHMvbWFpbi9jbGFuZy1yNTM2MjI1LnRhci5neg==" | base64 -d)
+          URL_KERNEL=$(printf '%s%s' 'https://codeberg.org' 'hadad/android_kernel_xiaomi_onclite.git')
+          URL_CLANG=$(printf '%s%s' 'https://googlesource.com' 'platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r536225.tar.gz')
           git clone --depth=1 "$URL_KERNEL" kernel_src
           mkdir -p clang
           curl -sL "$URL_CLANG" | tar -xz -C clang
