@@ -14,13 +14,12 @@ jobs:
             libelf-dev dwarves zip curl git python3 rsync jq ccache lz4
 
       - name: Clone Kernel Source & Toolchain
-        run: |
-          URL_KERNEL=$(printf '%s%s' 'https://codeberg.org' '/hadad/android_kernel_xiaomi_onclite.git')
-          URL_CLANG=$(printf '%s%s' 'https://googlesource.com' '/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r536225.tar.gz')
-          git clone --depth=1 "$URL_KERNEL" kernel_src
-          mkdir -p clang
-          curl -sL "$URL_CLANG" | tar -xz -C clang
-
+       run: |
+        URL_KERNEL=$(printf '%s%s' 'https://codeberg.org' '/hadad/android_kernel_xiaomi_onclite.git')
+        URL_CLANG=$(printf '%s%s' 'https://github.com' '/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git')
+        git clone --depth=1 "$URL_KERNEL" kernel_src
+        git clone --depth=1 "$URL_CLANG" clang
+       
       - name: Integrate KernelSU-Next, SuSFS & NoMount
         working-directory: kernel_src
         run: |
