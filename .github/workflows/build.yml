@@ -79,23 +79,24 @@ jobs:
           CONFIG_HZ_300=y
           EOF
 
-          make O=out CC=clang LD=ld.lld "$DEFCONFIG_NAME"
-          make -j$(nproc) O=out \
-            CC=clang \
-            LD=ld.lld \
-            AR=llvm-ar \
-            NM=llvm-nm \
-            OBJCOPY=llvm-objcopy \
-            OBJDUMP=llvm-objdump \
-            STRIP=llvm-strip \
-            HOSTCC=gcc \
-            HOSTCXX=g++ \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            Image.gz-dtb
+          MAKE_ARGS=(
+            O=out
+            ARCH=arm64
+            CC=clang
+            LD=ld.lld
+            AR=llvm-ar
+            NM=llvm-nm
+            OBJCOPY=llvm-objcopy
+            OBJDUMP=llvm-objdump
+            STRIP=llvm-strip
+            HOSTCC=gcc
+            HOSTCXX=g++
+            CLANG_TRIPLE=aarch64-linux-gnu-
+            CROSS_COMPILE=aarch64-linux-gnu-
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-)
 
-
+          make "${MAKE_ARGS[@]}" "$DEFCONFIG_NAME"
+          make -j$(nproc) "${MAKE_ARGS[@]}" Image.gz-dtb
 
       - name: Package AnyKernel3 Zip
         run: |
