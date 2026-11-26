@@ -89,7 +89,6 @@ jobs:
           echo "ccflags-y += -Wno-incompatible-function-pointer-types" >> kernel/bpf/Makefile
           echo "dtb-\$(CONFIG_ARCH_MSM8953) += \$(patsubst %.dts,%.dtb,\$(notdir \$(wildcard \$(srctree)/\$(src)/*onclite*.dts)))" > arch/arm64/boot/dts/qcom/Makefile
 
-
           MAKE_ARGS=(
            O=out
            ARCH=arm64
@@ -106,8 +105,8 @@ jobs:
            CROSS_COMPILE=aarch64-linux-gnu-
            CROSS_COMPILE_ARM32=arm-linux-gnueabi-)
 
-          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip "$DEFCONFIG_NAME"
-          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip Image.gz-dtb
+           make "${MAKE_ARGS[@]}" "$DEFCONFIG_NAME"
+           make -j$(nproc) "${MAKE_ARGS[@]}" Image.gz-dtb
 
       - name: Package AnyKernel3 Zip
         run: |
