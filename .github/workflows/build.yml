@@ -7,7 +7,6 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-    
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -26,16 +25,14 @@ jobs:
         run: |
           GH="github.com"
           RAW="://githubusercontent.com"
-          GL="gitlab.com"
 
           # 1. KernelSU-Next
           curl -LSs "https://${RAW}/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s next
 
-          # 2. SuSFS (4.9 Backported)
-          git clone --depth=1 -b kernel-4.9 "https://${GL}/simonpunk/susfs4ksu.git" susfs
-          cp susfs/kernel_patches/fs/* fs/
-          cp susfs/kernel_patches/include/linux/* include/linux/
-          patch -p1 --fuzz=3 < susfs/kernel_patches/50_add_susfs_in_kernel-4.9.patch || true
+          # 2. SuSFS (JackA1ltman 4.9 Backport)
+          git clone --depth=1 -b kernel-4.9-backport "https://${GH}/JackA1ltman/susfs4ksu.git" susfs
+          patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch
+          bash susfs/Patches/susfs_inline_hook_patches.sh
 
           # 3. NoMount + Fix 4.9 Backported VFS
           git clone --depth=1 "https://${GH}/maxsteeel/nomount.git" nomount_src
@@ -44,13 +41,25 @@ jobs:
           sed -i 's/int nm_getattr(struct vfsmount \*mnt, struct dentry \*dentry, struct kstat \*stat)/int nm_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int flags)/g' fs/nomount/nomount.c
           sed -i '/int nm_getattr(const struct path \*path/,/{/ s/{/{\n\tstruct dentry *dentry = path->dentry;/' fs/nomount/nomount.c
 
-      - name: Apply Evolution Kernel Tuning (Daily & Gaming)
+      - name: Apply Evolution Kernel Tuning & Compile
         working-directory: kernel_src
         run: |
-          DEFCONFIG="arch/arm64/configs/onclite_defconfig"
-          sed -i 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-Evolution-Kernel"/' $DEFCONFIG
+          export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export KBUILD_BUILD_USER="Evolution"
+          export KBUILD_BUILD_HOST="Onclite-A13-A17"
 
-          cat << 'EOF' >> $DEFCONFIG
+          # Deteksi otomatis file defconfig onclite (onclite-perf_defconfig / vendor/...)
+          DEFCONFIG_PATH=$(find arch/arm64/configs -name "*onclite*defconfig" | head -n 1)
+          DEFCONFIG_NAME=${DEFCONFIG_PATH#arch/arm64/configs/}
+          echo "Menggunakan defconfig: $DEFCONFIG_NAME"
+
+          # Identitas Evolution Kernel
+          sed -i 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-Evolution-Kernel"/' "$DEFCONFIG_PATH"
+
+          # Aktifkan KSU-Next, SuSFS, NoMount & Tuning Gaming/Daily
+          cat << 'EOF' >> "$DEFCONFIG_PATH"
           CONFIG_KSU=y
           CONFIG_KSU_SUSFS=y
           CONFIG_KSU_SUSFS_SUS_PATH=y
@@ -71,16 +80,7 @@ jobs:
           CONFIG_HZ_300=y
           EOF
 
-      - name: Compile Evolution Kernel
-        working-directory: kernel_src
-        run: |
-          export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
-          export ARCH=arm64
-          export SUBARCH=arm64
-          export KBUILD_BUILD_USER="Evolution"
-          export KBUILD_BUILD_HOST="Onclite-A13-A17"
-
-          make O=out onclite_defconfig
+          make O=out "$DEFCONFIG_NAME"
           make -j$(nproc) O=out \
             CC="ccache clang" \
             CLANG_TRIPLE=aarch64-linux-gnu- \
