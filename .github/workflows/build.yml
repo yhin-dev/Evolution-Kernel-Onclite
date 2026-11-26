@@ -1,0 +1,112 @@
+name: Build Evolution Kernel (Onclite A13-A17)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set up Swap Space
+        uses: pierotofy/set-swap-space@v1.0
+        with:
+          swap-size-gb: 10
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc cpio flex bison libssl-dev \
+            libelf-dev dwarves zip curl git python3 rsync jq ccache lz4
+
+      - name: Clone Kernel Source & Toolchain
+        run: |
+          git clone --depth=1 -b 16 https://codeberg.org kernel_src
+          git clone --depth=1 https://github.com clang
+
+      - name: Integrate KernelSU-Next, SuSFS & NoMount
+        working-directory: kernel_src
+        run: |
+          # 1. KernelSU-Next
+          curl -LSs "https://githubusercontent.com" | bash -s next
+
+          # 2. SuSFS (4.9 Backported)
+          git clone --depth=1 -b kernel-4.9 https://gitlab.com susfs
+          cp susfs/kernel_patches/fs/* fs/
+          cp susfs/kernel_patches/include/linux/* include/linux/
+          patch -p1 --fuzz=3 < susfs/kernel_patches/50_add_susfs_in_kernel-4.9.patch || true
+
+          # 3. NoMount + Fix 4.9 Backported VFS
+          git clone --depth=1 https://github.com nomount_src
+          bash nomount_src/kernel/setup.sh
+          sed -i 's/vfs_getattr_nosec(&info->r_path, stat)/vfs_getattr_nosec(\&info->r_path, stat, STATX_BASIC_STATS, AT_STATX_SYNC_AS_STAT)/g' fs/nomount/nomount.c
+          sed -i 's/int nm_getattr(struct vfsmount \*mnt, struct dentry \*dentry, struct kstat \*stat)/int nm_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int flags)/g' fs/nomount/nomount.c
+          sed -i '/int nm_getattr(const struct path \*path/,/{/ s/{/{\n\tstruct dentry *dentry = path->dentry;/' fs/nomount/nomount.c
+
+      - name: Apply Evolution Kernel Tuning (Daily & Gaming)
+        working-directory: kernel_src
+        run: |
+          DEFCONFIG="arch/arm64/configs/onclite_defconfig"
+
+          # Identitas Evolution Kernel
+          sed -i 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-Evolution-Kernel"/' $DEFCONFIG
+
+          # Aktifkan KSU-Next, SuSFS & NoMount
+          cat << 'EOF' >> $DEFCONFIG
+          CONFIG_KSU=y
+          CONFIG_KSU_SUSFS=y
+          CONFIG_KSU_SUSFS_SUS_PATH=y
+          CONFIG_KSU_SUSFS_SUS_MOUNT=y
+          CONFIG_KSU_SUSFS_SUS_KSTAT=y
+          CONFIG_KSU_SUSFS_SPOOF_UNAME=y
+          CONFIG_KSU_SUSFS_ENABLE_LOG=y
+          CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y
+          CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y
+          CONFIG_KSU_SUSFS_OPEN_REDIRECT=y
+          CONFIG_KSU_SUSFS_SUS_MAP=y
+          CONFIG_NOMOUNT=y
+
+          # Tuning Gaming ML/FF + Irit Baterai Harian
+          CONFIG_CPU_FREQ_DEFAULT_GOV_SCHEDUTIL=y
+          CONFIG_TCP_CONG_ADVANCED=y
+          CONFIG_TCP_CONG_BBR=y
+          CONFIG_DEFAULT_BBR=y
+          CONFIG_DEFAULT_TCP_CONG="bbr"
+          CONFIG_HZ_300=y
+          EOF
+
+      - name: Compile Evolution Kernel
+        working-directory: kernel_src
+        run: |
+          export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export KBUILD_BUILD_USER="Evolution"
+          export KBUILD_BUILD_HOST="Onclite-A13-A17"
+
+          make O=out onclite_defconfig
+          make -j$(nproc) O=out \
+            CC="ccache clang" \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            Image.gz-dtb
+
+      - name: Package AnyKernel3 Zip
+        run: |
+          git clone --depth=1 https://github.com AnyKernel3
+          cp kernel_src/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+
+          sed -i 's/kernel.string=.*/kernel.string=Evolution Kernel [A13-A17] by yhin-dev/' AnyKernel3/anykernel.sh
+          sed -i 's/device.name1=.*/device.name1=onclite/' AnyKernel3/anykernel.sh
+          sed -i 's/device.name2=.*/device.name2=onc/' AnyKernel3/anykernel.sh
+          sed -i 's/do.devicecheck=.*/do.devicecheck=1/' AnyKernel3/anykernel.sh
+          sed -i 's/supported.versions=.*/supported.versions=/' AnyKernel3/anykernel.sh
+
+          cd AnyKernel3
+          zip -r9 "$GITHUB_WORKSPACE/Evolution-Kernel-onclite-A13-A17-$(date +%Y%m%d).zip" * -x .git README.md *placeholder
+
+      - name: Upload Evolution Kernel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Evolution-Kernel-Onclite
+          path: Evolution-Kernel-onclite-*.zip
