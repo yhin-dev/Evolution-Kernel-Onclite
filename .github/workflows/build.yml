@@ -86,6 +86,7 @@ jobs:
           sed -i 's/barrier_nospec();/barrier();/g' kernel/bpf/core.c
           sed -i 's/-Werror//g' kernel/bpf/Makefile
           sed -i 's/bpf_jit_blinding_enabled(prog)/false/g' kernel/bpf/verifier.c
+          sed -i '/apq8053-lite-dragon/d' arch/arm64/boot/dts/qcom/Makefile
           echo "ccflags-y += -Wno-incompatible-function-pointer-types" >> kernel/bpf/Makefile
 
           MAKE_ARGS=(
