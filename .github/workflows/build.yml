@@ -15,8 +15,8 @@ jobs:
 
       - name: Clone Kernel Source & Toolchain
         run: |
-          URL_KERNEL=$(printf '%s%s' 'https://codeberg.org' 'hadad/android_kernel_xiaomi_onclite.git')
-          URL_CLANG=$(printf '%s%s' 'https://googlesource.com' 'platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r536225.tar.gz')
+          URL_KERNEL=$(printf '%s%s' 'https://codeberg.org' '/hadad/android_kernel_xiaomi_onclite.git')
+          URL_CLANG=$(printf '%s%s' 'https://googlesource.com' '/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r536225.tar.gz')
           git clone --depth=1 "$URL_KERNEL" kernel_src
           mkdir -p clang
           curl -sL "$URL_CLANG" | tar -xz -C clang
