@@ -9,9 +9,10 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential bc cpio flex bison libssl-dev \
-            libelf-dev dwarves zip curl git python3 rsync jq ccache lz4
+         sudo apt-get update
+         sudo apt-get install -y build-essential bc cpio flex bison libssl-dev \
+         libelf-dev dwarves zip curl git python3 rsync jq ccache lz4 \
+         gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
       - name: Clone Kernel Source & Toolchain
         run: |
@@ -80,20 +81,21 @@ jobs:
           EOF
 
           MAKE_ARGS=(
-            O=out
-            ARCH=arm64
-            CC=clang
-            LD=ld.lld
-            AR=llvm-ar
-            NM=llvm-nm
-            OBJCOPY=llvm-objcopy
-            OBJDUMP=llvm-objdump
-            STRIP=llvm-strip
-            HOSTCC=gcc
-            HOSTCXX=g++
-            CLANG_TRIPLE=aarch64-linux-gnu-
-            CROSS_COMPILE=aarch64-linux-gnu-
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi-)
+           O=out
+           ARCH=arm64
+           CC=clang
+           LD=ld.lld
+           AR=llvm-ar
+           NM=llvm-nm
+           OBJCOPY=llvm-objcopy
+           OBJDUMP=llvm-objdump
+           STRIP=llvm-strip
+           HOSTCC=gcc
+           HOSTCXX=g++
+           CLANG_TRIPLE=aarch64-linux-gnu-
+           CROSS_COMPILE=aarch64-linux-gnu-
+           CROSS_COMPILE_ARM32=arm-linux-gnueabi-)
+
 
           make "${MAKE_ARGS[@]}" "$DEFCONFIG_NAME"
           make -j$(nproc) "${MAKE_ARGS[@]}" Image.gz-dtb
