@@ -14,13 +14,13 @@ jobs:
             libelf-dev dwarves zip curl git python3 rsync jq ccache lz4
 
       - name: Clone Kernel Source & Toolchain
-     run: |
-       URL_KERNEL=$(echo "aHR0cHM6Ly9jb2RlYmVyZy5vcmcvaGFkYWQvYW5kcm9pZF9rZXJuZWxfeGlhb21pX29uY2xpdGUuZ2l0" | base64 -d)
-       URL_CLANG=$(echo "aHR0cHM6Ly9hbmRyb2lkLmdvb2dsZXNvdXJjZS5jb20vcGxhdGZvcm0vcHJlYnVpbHRzL2NsYW5nL2hvc3QvbGludXgteDg2LytarchiveL3JlZnMvaGVhZHMvbWFpbi9jbGFuZy1yNTM2MjI1LnRhci5neg==" | base64 -d)
-         git clone --depth=1 "$URL_KERNEL" kernel_src
-         mkdir -p clang
-         curl -sL "$URL_CLANG" | tar -xz -C clang
-       
+        run: |
+          URL_KERNEL=$(echo "aHR0cHM6Ly9jb2RlYmVyZy5vcmcvaGFkYWQvYW5kcm9pZF9rZXJuZWxfeGlhb21pX29uY2xpdGUuZ2l0" | base64 -d)
+          URL_CLANG=$(echo "aHR0cHM6Ly9hbmRyb2lkLmdvb2dsZXNvdXJjZS5jb20vcGxhdGZvcm0vcHJlYnVpbHRzL2NsYW5nL2hvc3QvbGludXgteDg2LytarchiveL3JlZnMvaGVhZHMvbWFpbi9jbGFuZy1yNTM2MjI1LnRhci5neg==" | base64 -d)
+          git clone --depth=1 "$URL_KERNEL" kernel_src
+          mkdir -p clang
+          curl -sL "$URL_CLANG" | tar -xz -C clang
+
       - name: Integrate KernelSU-Next, SuSFS & NoMount
         working-directory: kernel_src
         run: |
@@ -34,7 +34,7 @@ jobs:
 
           # 2. SuSFS (JackA1ltman 4.9 Backport)
           git clone --depth=1 "$URL_SUSFS" susfs
-          patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch || true 
+          patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch || true
           find . -name "*.rej" -delete
           bash susfs/Patches/susfs_inline_hook_patches.sh
 
@@ -79,15 +79,16 @@ jobs:
           CONFIG_DEFAULT_TCP_CONG="bbr"
           CONFIG_HZ_300=y
           EOF
-        make O=out "$DEFCONFIG_NAME"
+
+          make O=out "$DEFCONFIG_NAME"
           make -j$(nproc) O=out \
-         CC="ccache clang" \
-         HOSTCC=gcc \
-         HOSTCXX=g++ \
-         CLANG_TRIPLE=aarch64-linux-gnu- \
-         CROSS_COMPILE=aarch64-linux-gnu- \
-         CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-         Image.gz-dtb
+            CC="ccache clang" \
+            HOSTCC=gcc \
+            HOSTCXX=g++ \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            Image.gz-dtb
 
       - name: Package AnyKernel3 Zip
         run: |
