@@ -28,7 +28,7 @@ jobs:
           URL_NOMOUNT=$(echo "aHR0cHM6Ly9naXRodWIuY29tL21heHN0ZWVlbC9ub21vdW50LmdpdA==" | base64 -d)
 
           # 1. KernelSU-Next
-          git clone --depth=1 -b next "$URL_KSU" KernelSU-Next
+          git clone --depth=1 "$URL_KSU" KernelSU-Next
           bash KernelSU-Next/kernel/setup.sh next
 
           # 2. SuSFS (JackA1ltman 4.9 Backport)
