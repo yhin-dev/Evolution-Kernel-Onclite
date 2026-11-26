@@ -29,7 +29,7 @@ jobs:
         working-directory: kernel_src
         run: |
           GH="github.com"
-          RAW="://githubusercontent.com"
+          RAW="//://githubusercontent.com"
           GL="gitlab.com"
 
           # 1. KernelSU-Next
