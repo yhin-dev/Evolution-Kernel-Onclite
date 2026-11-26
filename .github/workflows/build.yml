@@ -81,13 +81,14 @@ jobs:
           CONFIG_HZ_300=y
           EOF
           
-          # Fix error kompilasi kernel/bpf/core.c pada Clang r416183b
+          # Fix error kompilasi kernel/bpf/core.c & verifier.c pada Clang r416183b
           sed -i 's/__annotate_jump_table//g' kernel/bpf/core.c
           sed -i 's/barrier_nospec();/barrier();/g' kernel/bpf/core.c
-          sed -i 's/-Werror//g' kernel/bpf/Makefile
           sed -i 's/bpf_jit_blinding_enabled(prog)/false/g' kernel/bpf/verifier.c
-          grep -E "sdm632|onclite" arch/arm64/boot/dts/qcom/Makefile > arch/arm64/boot/dts/qcom/Makefile.tmp && mv arch/arm64/boot/dts/qcom/Makefile.tmp arch/arm64/boot/dts/qcom/Makefile
+          sed -i 's/-Werror//g' kernel/bpf/Makefile
           echo "ccflags-y += -Wno-incompatible-function-pointer-types" >> kernel/bpf/Makefile
+          sed -i '/apq8053\|msm8953/d' arch/arm64/boot/dts/qcom/Makefile
+
 
           MAKE_ARGS=(
            O=out
