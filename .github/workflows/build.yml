@@ -24,7 +24,7 @@ jobs:
         working-directory: kernel_src
         run: |
           URL_KSU=$(echo "aHR0cHM6Ly9naXRodWIuY29tL0tlcm5lbFNVLU5leHQvS2VybmVsU1UtTmV4dC5naXQ=" | base64 -d)
-          URL_SUSFS=$(echo "aHR0cHM6Ly9naXRodWIuY29tL0phY2tBMWx0bWFuL3N1c2ZzNGtzdS5naXQ=" | base64 -d)
+          URL_SUSFS=$(echo "aHR0cHM6Ly9naXRodWIuY29tL0phY2tBMWx0bWFuL05vbkdLSV9LZXJuZWxfQnVpbGRfMm5kLmdpdA==" | base64 -d)
           URL_NOMOUNT=$(echo "aHR0cHM6Ly9naXRodWIuY29tL21heHN0ZWVlbC9ub21vdW50LmdpdA==" | base64 -d)
 
           # 1. KernelSU-Next
