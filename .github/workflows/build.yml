@@ -12,26 +12,32 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential bc cpio flex bison libssl-dev \
             libelf-dev dwarves zip curl git python3 rsync jq ccache lz4
-          git config --global url."https://".insteadOf git://
 
       - name: Clone Kernel Source & Toolchain
         run: |
-          git clone --depth=1 git://codeberg.org/hadad/android_kernel_xiaomi_onclite.git kernel_src
-          git clone --depth=1 git://github.com clang
+          URL_KERNEL=$(echo "aHR0cHM6Ly9jb2RlYmVyZy5vcmcvaGFkYWQvYW5kcm9pZF9rZXJuZWxfeGlhb21pX29uY2xpdGUuZ2l0" | base64 -d)
+          URL_CLANG=$(echo "aHR0cHM6Ly9naXRodWIuY29tL2tkcmFnMG4vcHJvdG9uLWNsYW5nLmdpdA==" | base64 -d)
+          git clone --depth=1 "$URL_KERNEL" kernel_src
+          git clone --depth=1 "$URL_CLANG" clang
+
       - name: Integrate KernelSU-Next, SuSFS & NoMount
         working-directory: kernel_src
         run: |
+          URL_KSU=$(echo "aHR0cHM6Ly9naXRodWIuY29tL0tlcm5lbFNVLU5leHQvS2VybmVsU1UtTmV4dC5naXQ=" | base64 -d)
+          URL_SUSFS=$(echo "aHR0cHM6Ly9naXRodWIuY29tL0phY2tBMWx0bWFuL3N1c2ZzNGtzdS5naXQ=" | base64 -d)
+          URL_NOMOUNT=$(echo "aHR0cHM6Ly9naXRodWIuY29tL21heHN0ZWVlbC9ub21vdW50LmdpdA==" | base64 -d)
+
           # 1. KernelSU-Next
-          git clone --depth=1 -b next git://github.com KernelSU-Next
+          git clone --depth=1 -b next "$URL_KSU" KernelSU-Next
           bash KernelSU-Next/kernel/setup.sh next
 
           # 2. SuSFS (JackA1ltman 4.9 Backport)
-          git clone --depth=1 -b kernel-4.9-backport git://github.com susfs
+          git clone --depth=1 -b kernel-4.9-backport "$URL_SUSFS" susfs
           patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch
           bash susfs/Patches/susfs_inline_hook_patches.sh
 
           # 3. NoMount + Fix 4.9 Backported VFS
-          git clone --depth=1 git://github.com nomount_src
+          git clone --depth=1 "$URL_NOMOUNT" nomount_src
           bash nomount_src/kernel/setup.sh
           sed -i 's/vfs_getattr_nosec(&info->r_path, stat)/vfs_getattr_nosec(\&info->r_path, stat, STATX_BASIC_STATS, AT_STATX_SYNC_AS_STAT)/g' fs/nomount/nomount.c
           sed -i 's/int nm_getattr(struct vfsmount \*mnt, struct dentry \*dentry, struct kstat \*stat)/int nm_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int flags)/g' fs/nomount/nomount.c
@@ -83,7 +89,8 @@ jobs:
 
       - name: Package AnyKernel3 Zip
         run: |
-          git clone --depth=1 git://://github.com AnyKernel3
+          URL_AK3=$(echo "aHR0cHM6Ly9naXRodWIuY29tL29zbTBzaXMvQW55S2VybmVsMy5naXQ=" | base64 -d)
+          git clone --depth=1 "$URL_AK3" AnyKernel3
           cp kernel_src/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
 
           sed -i 's/kernel.string=.*/kernel.string=Evolution Kernel [A13-A17] by yhin-dev/' AnyKernel3/anykernel.sh
