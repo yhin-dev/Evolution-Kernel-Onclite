@@ -15,27 +15,25 @@ jobs:
 
       - name: Clone Kernel Source & Toolchain
         run: |
-          CB="codeberg.org"
-          GH="github.com"
-          git clone --depth=1 "https://${CB}/hadad/android_kernel_xiaomi_onclite.git" kernel_src
-          git clone --depth=1 "https://${GH}/kdrag0n/proton-clang.git" clang
+          H="https://"
+          git clone --depth=1 "${H}codeberg.org/hadad/android_kernel_xiaomi_onclite.git" kernel_src
+          git clone --depth=1 "${H}://github.com" clang
 
       - name: Integrate KernelSU-Next, SuSFS & NoMount
         working-directory: kernel_src
         run: |
-          GH="github.com"
-          RAW="://githubusercontent.com"
+          H="https://"
 
           # 1. KernelSU-Next
-          curl -LSs "https://${RAW}/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s next
+          curl -LSs "${H}://githubusercontent.com" | bash -s next
 
           # 2. SuSFS (JackA1ltman 4.9 Backport)
-          git clone --depth=1 -b kernel-4.9-backport "https://${GH}/JackA1ltman/susfs4ksu.git" susfs
+          git clone --depth=1 -b kernel-4.9-backport "${H}://github.com" susfs
           patch -p1 --fuzz=3 < susfs/Patches/Patch/susfs_patch_to_4.9.patch
           bash susfs/Patches/susfs_inline_hook_patches.sh
 
           # 3. NoMount + Fix 4.9 Backported VFS
-          git clone --depth=1 "https://${GH}/maxsteeel/nomount.git" nomount_src
+          git clone --depth=1 "${H}://github.com" nomount_src
           bash nomount_src/kernel/setup.sh
           sed -i 's/vfs_getattr_nosec(&info->r_path, stat)/vfs_getattr_nosec(\&info->r_path, stat, STATX_BASIC_STATS, AT_STATX_SYNC_AS_STAT)/g' fs/nomount/nomount.c
           sed -i 's/int nm_getattr(struct vfsmount \*mnt, struct dentry \*dentry, struct kstat \*stat)/int nm_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int flags)/g' fs/nomount/nomount.c
@@ -50,15 +48,12 @@ jobs:
           export KBUILD_BUILD_USER="Evolution"
           export KBUILD_BUILD_HOST="Onclite-A13-A17"
 
-          # Deteksi otomatis file defconfig onclite (onclite-perf_defconfig / vendor/...)
           DEFCONFIG_PATH=$(find arch/arm64/configs -name "*onclite*defconfig" | head -n 1)
           DEFCONFIG_NAME=${DEFCONFIG_PATH#arch/arm64/configs/}
           echo "Menggunakan defconfig: $DEFCONFIG_NAME"
 
-          # Identitas Evolution Kernel
           sed -i 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-Evolution-Kernel"/' "$DEFCONFIG_PATH"
 
-          # Aktifkan KSU-Next, SuSFS, NoMount & Tuning Gaming/Daily
           cat << 'EOF' >> "$DEFCONFIG_PATH"
           CONFIG_KSU=y
           CONFIG_KSU_SUSFS=y
@@ -90,8 +85,8 @@ jobs:
 
       - name: Package AnyKernel3 Zip
         run: |
-          GH="github.com"
-          git clone --depth=1 "https://${GH}/osm0sis/AnyKernel3.git" AnyKernel3
+          H="https://"
+          git clone --depth=1 "${H}://github.com" AnyKernel3
           cp kernel_src/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
 
           sed -i 's/kernel.string=.*/kernel.string=Evolution Kernel [A13-A17] by yhin-dev/' AnyKernel3/anykernel.sh
